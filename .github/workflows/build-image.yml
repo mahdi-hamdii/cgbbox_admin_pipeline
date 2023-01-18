@@ -24,7 +24,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-2
+        aws-region: eu-west-3
 
     - name: Login to Amazon ECR
       id: login-ecr
@@ -32,6 +32,7 @@ jobs:
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
+
     - name: Get current date
       id: date
       run: echo "::set-output name=date::$(date +'%Y-%m-%d-%H-%M-%S')"
