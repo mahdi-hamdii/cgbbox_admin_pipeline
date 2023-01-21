@@ -58,5 +58,5 @@ jobs:
         ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
           
         #Now we have got the access of EC2 and we will start the deploy .
-        docker ps
+        docker pull 835670117231.dkr.ecr.eu-west-3.amazonaws.com/cgbox_admin:2023-01-19-22-50-25
         '
