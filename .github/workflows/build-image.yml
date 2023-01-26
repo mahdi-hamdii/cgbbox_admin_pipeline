@@ -11,10 +11,12 @@ jobs:
    name: "Terraform Provision Env"
    runs-on: ubuntu-latest
    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
       TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+   outputs:
+     publicIP: ${{ steps.publicIP.outputs.ip }}
    steps:
    - name: Get code
      uses: actions/checkout@v3
@@ -26,10 +28,12 @@ jobs:
       
    - name: Setup Terraform CLI
      uses: hashicorp/setup-terraform@v2 
+
    - name: Add the private key
      env:
         PRIVATE_KEY: ${{ secrets.CICD_PRIVATE_KEY }}
      run: echo "$PRIVATE_KEY" > /home/runner/work/cgbbox_admin_pipeline/cgbbox_admin_pipeline/dev-env-aws-cicd/private_key.pem
+
    - name: Change Private Key permissions
      run: chmod 400 /home/runner/work/cgbbox_admin_pipeline/cgbbox_admin_pipeline/dev-env-aws-cicd/private_key.pem
 
@@ -38,6 +42,9 @@ jobs:
      run: |
           terraform init
           terraform apply -var 'private_key_path=/home/runner/work/cgbbox_admin_pipeline/cgbbox_admin_pipeline/dev-env-aws-cicd/private_key.pem' -auto-approve
+   - name: public ip
+     id: publicIP
+     run: echo ip=$(terraform output public_ip) >> $GITHUB_OUTPUT   
 
   push-ecr:
     needs: [provision-env]
@@ -64,33 +71,52 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-    # - name: Set up Docker Buildx
-    #   uses: docker/setup-buildx-action@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
 
-    # - name: Get current date
-    #   id: date
-    #   run: echo "::set-output name=date::$(date +'%Y-%m-%d-%H-%M-%S')"
+    - name: Get current date
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y-%m-%d-%H-%M-%S')"
 
-    # - name: Build and push
-    #   uses: docker/build-push-action@v3
-    #   with:
-    #     file: Dockerfile
-    #     tags: ${{ steps.login-ecr.outputs.registry }}/${{ secrets.REPO_NAME }}:${{ steps.date.outputs.date }}
-    #     push: true
-  # Deploy:
-  #   name: Deploy to EC2
-  #   needs: push-ecr
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: ssh to EC2
-  #     env:
-  #           PRIVATE_KEY: ${{ secrets.AWS_PRIVATE_KEY  }}
-  #           HOSTNAME : ${{ secrets.HOSTNAME  }}
-  #           USER_NAME : ${{ secrets.USER_NAME  }}
-  #     run: |
-  #       echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-  #       ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
+    - name: Build and push
+      uses: docker/build-push-action@v3
+      with:
+        file: Dockerfile
+        tags: ${{ steps.login-ecr.outputs.registry }}/${{ secrets.REPO_NAME }}:${{ steps.date.outputs.date }}
+        push: true
+  Deploy:
+    name: Deploy to EC2
+    needs: [push-ecr, provision-env]
+    runs-on: ubuntu-latest
+    steps:
+     - name: Public Outputs
+       run: echo ${{ needs.provision-env.outputs.publicIP }}
+     
+     - name: Set Public IP of the server as an env variable
+       run: echo PUBLIC_IP=`echo "${{ needs.provision-env.outputs.publicIP }}" | awk '{print $1}'` >> $GITHUB_ENV
+      
+     - name: Public IP of the server
+       run: echo ${{ env.PUBLIC_IP }}
+     - name: Deploying to EC2 
+       uses: appleboy/ssh-action@v0.1.6
+       env:
+          IMAGE_TAG: test
+       with:
+          host: ${{ env.PUBLIC_IP }}
+          username: ubuntu
+          key: ${{ secrets.CICD_PRIVATE_KEY }}
+          port: "22"
+          script: |
+            echo connected
+    #  - name: ssh to EC2
+    #    env:
+    #         PRIVATE_KEY: ${{ secrets.CICD_PRIVATE_KEY  }}
+    #         HOSTNAME : ${{ secrets.HOSTNAME  }}
+    #         USER_NAME : ${{ secrets.USER_NAME  }}
+    #    run: |
+    #     echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+    #     ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
           
-  #       #Now we have got the access of EC2 and we will start the deploy .
-  #       docker pull 835670117231.dkr.ecr.eu-west-3.amazonaws.com/cgbox_admin:2023-01-19-22-50-25
-        # '
+    #     #Now we have got the access of EC2 and we will start the deploy .
+    #     docker pull 835670117231.dkr.ecr.eu-west-3.amazonaws.com/cgbox_admin:2023-01-19-22-50-25
+    #     '
