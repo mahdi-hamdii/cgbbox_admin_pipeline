@@ -7,6 +7,7 @@ on:
 name: AWS ECR push
 jobs:
   push-ecr:
+    needs: [provision-env]
     permissions:
       id-token: write
       contents: read
@@ -43,20 +44,20 @@ jobs:
     #     file: Dockerfile
     #     tags: ${{ steps.login-ecr.outputs.registry }}/${{ secrets.REPO_NAME }}:${{ steps.date.outputs.date }}
     #     push: true
-  Deploy:
-    name: Deploy to EC2
-    needs: push-ecr
-    runs-on: ubuntu-latest
-    steps:
-    - name: ssh to EC2
-      env:
-            PRIVATE_KEY: ${{ secrets.AWS_PRIVATE_KEY  }}
-            HOSTNAME : ${{ secrets.HOSTNAME  }}
-            USER_NAME : ${{ secrets.USER_NAME  }}
-      run: |
-        echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-        ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
+  # Deploy:
+  #   name: Deploy to EC2
+  #   needs: push-ecr
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: ssh to EC2
+  #     env:
+  #           PRIVATE_KEY: ${{ secrets.AWS_PRIVATE_KEY  }}
+  #           HOSTNAME : ${{ secrets.HOSTNAME  }}
+  #           USER_NAME : ${{ secrets.USER_NAME  }}
+  #     run: |
+  #       echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+  #       ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
           
-        #Now we have got the access of EC2 and we will start the deploy .
-        docker pull 835670117231.dkr.ecr.eu-west-3.amazonaws.com/cgbox_admin:2023-01-19-22-50-25
-        '
+  #       #Now we have got the access of EC2 and we will start the deploy .
+  #       docker pull 835670117231.dkr.ecr.eu-west-3.amazonaws.com/cgbox_admin:2023-01-19-22-50-25
+        # '
