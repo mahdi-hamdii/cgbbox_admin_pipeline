@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     
 
-name: AWS ECR push
+name: Create Dev Environment with current image
 jobs:
 
   provision-env:
@@ -45,7 +45,8 @@ jobs:
    - name: public ip
      id: publicIP
      working-directory: /home/runner/work/cgbbox_admin_pipeline/cgbbox_admin_pipeline/dev-env-aws-cicd/
-     run: echo ip=$(terraform output public_ip) >> $GITHUB_OUTPUT   
+     run: echo ip=`terraform output | awk -F= '{print $2}' | awk -F\" '{print $2}'` >> $GITHUB_OUTPUT  
+      
 
   push-ecr:
     needs: [provision-env]
