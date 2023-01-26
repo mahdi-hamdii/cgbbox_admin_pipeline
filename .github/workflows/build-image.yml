@@ -22,6 +22,7 @@ jobs:
         repository: 'mahdi-hamdii/dev-env-aws-cicd'
         ref: 'main'
         token: ${{ secrets.GH_TOKEN }}
+        path: '/dev-env-aws-cicd'
       
    - name: Setup Terraform CLI
      uses: hashicorp/setup-terraform@v2 
@@ -30,7 +31,7 @@ jobs:
         PRIVATE_KEY: ${{ secrets.CICD_PRIVATE_KEY }}
      run: echo "$PRIVATE_KEY" > private_key.pem
    - name: echo code
-     run: ls /home/runner/work/cgbbox_admin_pipeline/cgbbox_admin_pipeline
+     run: ls /home/runner/work//dev-env-aws-cicd
    - name: Change Private Key permissions
      run: chmod 400 /home/runner/work/cgbbox_admin_pipeline/dev-env-aws-cicd/private_key.pem
 
