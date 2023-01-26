@@ -1,4 +1,4 @@
-name: "Terraform Destroy"
+name: "Destroy Dev Environment"
 
 on:
   workflow_dispatch:
@@ -29,6 +29,7 @@ jobs:
      run: echo "$PRIVATE_KEY" > /home/runner/work/cgbbox_admin_pipeline/cgbbox_admin_pipeline/dev-env-aws-cicd/private_key.pem 
 
    - name: init and  destroy
+     working-directory: /home/runner/work/cgbbox_admin_pipeline/cgbbox_admin_pipeline/dev-env-aws-cicd/
      run: |
           terraform init
           terraform destroy -var 'private_key_path=/home/runner/work/cgbbox_admin_pipeline/cgbbox_admin_pipeline/dev-env-aws-cicd/private_key.pem' --auto-approve 
