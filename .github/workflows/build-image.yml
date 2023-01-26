@@ -34,6 +34,7 @@ jobs:
      run: chmod 400 /home/runner/work/cgbbox_admin_pipeline/cgbbox_admin_pipeline/dev-env-aws-cicd/private_key.pem
 
    - name: init and  apply
+     working-directory: /home/runner/work/cgbbox_admin_pipeline/cgbbox_admin_pipeline/dev-env-aws-cicd/
      run: |
           terraform init
           terraform apply -var 'private_key_path=/home/runner/work/cgbbox_admin_pipeline/cgbbox_admin_pipeline/dev-env-aws-cicd/private_key.pem' -auto-approve
