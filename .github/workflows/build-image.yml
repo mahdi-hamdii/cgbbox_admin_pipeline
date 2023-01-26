@@ -44,6 +44,7 @@ jobs:
           terraform apply -var 'private_key_path=/home/runner/work/cgbbox_admin_pipeline/cgbbox_admin_pipeline/dev-env-aws-cicd/private_key.pem' -auto-approve
    - name: public ip
      id: publicIP
+     working-directory: /home/runner/work/cgbbox_admin_pipeline/cgbbox_admin_pipeline/dev-env-aws-cicd/
      run: echo ip=$(terraform output public_ip) >> $GITHUB_OUTPUT   
 
   push-ecr:
@@ -97,6 +98,7 @@ jobs:
       
      - name: Public IP of the server
        run: echo ${{ env.PUBLIC_IP }}
+
      - name: Deploying to EC2 
        uses: appleboy/ssh-action@v0.1.6
        env:
