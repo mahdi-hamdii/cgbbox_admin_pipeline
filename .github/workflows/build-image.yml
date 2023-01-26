@@ -22,7 +22,7 @@ jobs:
         repository: 'mahdi-hamdii/dev-env-aws-cicd'
         ref: 'main'
         token: ${{ secrets.GH_TOKEN }}
-        path: '/dev-env-aws-cicd'
+        path: "/home/runner/work/cgbbox_admin_pipeline/dev-env-aws-cicd"
       
    - name: Setup Terraform CLI
      uses: hashicorp/setup-terraform@v2 
